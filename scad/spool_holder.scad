@@ -20,14 +20,14 @@ angle = 45;
 hook = 8;
 hook_overlap = 3;
 tube_r = 4;
+socket_r = tube_r - min_wall;
+dowel_r = socket_r - 0.1;
 hook_r = 3;
 
 left = left_stay_x + sheet_thickness(frame) / 2;
 right =  right_stay_x - sheet_thickness(frame) / 2;
 spool_x = (left + right) / 2;
 spool_y = gantry_Y + sheet_thickness(frame) + 10 + spool_height(spool) / 2;
-
-holes = psu_hole_list(psu);
 
 bearing_r = (spool_diameter(spool) + ball_bearing_diameter(bearing)) / 2;
 bearing_x = cos(angle) * bearing_r;
@@ -167,10 +167,19 @@ module tube(height) {
     difference() {
         union() {
             cylinder(r = tube_r, h = height);
-            cylinder(r = tube_r - min_wall, h = height + thickness - wall - layer_height);        // dowel
+            hull() {
+                cylinder(r = dowel_r, h = height + thickness - wall - 2 * layer_height);              // dowel
+                cylinder(r = dowel_r - layer_height, h = height + thickness - wall - layer_height);   // chamferred end
+            }
         }
         translate([0, 0, wall])
             cylinder(r = tube_r - wall, h = height - 2 * wall);
+
+        translate([0, 0, height - layer_height])                // small hole to force solid layers above
+            cylinder(r = 1, h = layer_height);
+
+        translate([0, 0, height + 3 * layer_height])            // small hole to force solid layers above
+            cylinder(r = dowel_r - min_wall, h = layer_height);
     }
 }
 
@@ -274,7 +283,7 @@ module spool_bracket(width, height, tube) {
                 [top_tube_x, top_tube_y,    thickness],
                 [middle_tube_x, 0,          thickness],
             ]) translate(v)
-                cylinder(r = tube_r - min_wall + 0.1, h = - 2 * tube, center = true);           // socket for dowel
+                cylinder(r = socket_r, h = - 2 * tube, center = true);           // socket for dowel
     }
 }
 //
